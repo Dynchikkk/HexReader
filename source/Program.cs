@@ -1,3 +1,5 @@
+using HexReader.UI.MainForm;
+
 namespace HexReader
 {
     internal static class Program
@@ -9,7 +11,7 @@ namespace HexReader
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-            Application.Run(new MainForm());
+            Application.Run(new MainFormView());
         }
     }
 }
