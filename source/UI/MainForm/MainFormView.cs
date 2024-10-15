@@ -1,132 +1,106 @@
-﻿using HexReader.Script.CustomStream;
-using System.Windows.Forms;
-
-namespace HexReader.UI.MainForm
+﻿namespace HexReader.UI.MainForm
 {
     public partial class MainFormView : Form
     {
-        private const int MAX_DISPLAY_CHUNK = 3;
-        private const int CHUNK_SIZE = 1024;
-        private const int BYTES_PER_LINE = 16;
+        private const string READING_TEXT = "Reading...";
+        private const string READ_TEXT = "Read";
+        private const string ZERO_HEX_TEXT = "00000000";
 
-        private long _currentOffset = 0;
-        private string _filePath = "";
-        private string _displayString = "";
+        public event Action OnUpdatePath = delegate { };
+        public event Action OnRead = delegate { };
+        public event Action<float> OnTextScroll = delegate { };
+        public event Action<long> OnShift = delegate { };
+        public event Action OnReset = delegate { };
 
-        public MainFormView()
+        private readonly MainFormModel _model;
+
+        public MainFormView(MainFormModel model)
         {
             InitializeComponent();
             SplitContainer.Panel1.AutoScroll = true;
             SplitContainer.Panel1.HorizontalScroll.Enabled = false;
             SplitContainer.Panel1.HorizontalScroll.Visible = false;
 
-            SplitContainer.Panel1.MouseWheel += (s, e) => {
+            _model = model;
+            Sub();
+        }
+
+        ~MainFormView()
+        {
+            UnSub();
+        }
+
+        private void Sub()
+        {
+            SplitContainer.Panel1.MouseWheel += (s, e) =>
+            {
                 HandleScroll(s, null);
             };
+
+            _model.OnDisplayStringUpdate += UpdateDisplayText;
+            _model.OnFilePathUpdate += UpdateFilePathText;
+        }
+
+        private void UnSub()
+        {
+            _model.OnDisplayStringUpdate -= UpdateDisplayText;
+            _model.OnFilePathUpdate -= UpdateFilePathText;
         }
 
         private void PathTextBox_DoubleClick(object sender, EventArgs e)
         {
-            OpenFileDialog fileDialog = new OpenFileDialog();
-            fileDialog.InitialDirectory = "c:\\";
-            fileDialog.RestoreDirectory = true;
-            if (fileDialog.ShowDialog() != DialogResult.OK)
-            {
-                return;
-            }
-            FilePathTextBox.Text = fileDialog.FileName;
-            FilePathTextBox.TextAlign = HorizontalAlignment.Left;
-            UpdateReadButton(false);
+            OnUpdatePath?.Invoke();
         }
 
         private void ReadHexButton_Click(object sender, EventArgs e)
         {
-            if (!IsFilePathValid(FilePathTextBox.Text))
-            {
-                return;
-            }
-            _filePath = FilePathTextBox.Text;
+            OnRead?.Invoke();
             UpdateReadButton(true);
-            using (HexStream hexStream = new HexStream(_filePath, CHUNK_SIZE, BYTES_PER_LINE))
-            {
-                _displayString = hexStream.ReadChunk() + "\n";
-                _currentOffset = hexStream.Offset;
-            }
-            UpdateHexText(_displayString);
+            SplitContainer.Panel1.VerticalScroll.Value = 0;
         }
 
-        private void LoadNextChunk()
+        private void ResetPositionButton_Click(object sender, EventArgs e)
         {
-            if (!IsFilePathValid(_filePath))
+            OnRead?.Invoke();
+            SplitContainer.Panel1.VerticalScroll.Value = 0;
+        }
+
+        private void ShiftButton_Click(object sender, EventArgs e)
+        {
+            string hexValue = ShiftPostitionText.Text;
+            if (!hexValue.All(ch => (ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F')))
             {
+                ShiftPostitionText.Text = ZERO_HEX_TEXT;
                 return;
             }
-            using (HexStream hexStream = new HexStream(_filePath, CHUNK_SIZE, BYTES_PER_LINE))
-            {
-                hexStream.Shift(_currentOffset);
-                _displayString = TrimText(_displayString + hexStream.ReadChunk() + "\n", true);
-                _currentOffset = hexStream.Offset;
-            }
-            UpdateHexText(_displayString);
+            long value = Convert.ToInt64(hexValue, 16);
+            SplitContainer.Panel1.VerticalScroll.Value = 0;
+            OnShift?.Invoke(value);
         }
 
-        private void LoadPrevChunk()
+        private void UpdateFilePathText(string text)
         {
-            if (!IsFilePathValid(_filePath))
-            {
-                return;
-            }
-            using (HexStream hexStream = new HexStream(_filePath, CHUNK_SIZE, BYTES_PER_LINE))
-            {
-                _currentOffset = Math.Max(_currentOffset - CHUNK_SIZE * 2, 0);
-                hexStream.Shift(_currentOffset);
-                _displayString = TrimText(hexStream.ReadChunk() + "\n" + _displayString, false);
-                _currentOffset = hexStream.Offset;
-            }
-            UpdateHexText(_displayString);
+            FilePathTextBox.Text = text;
+            FilePathTextBox.TextAlign = HorizontalAlignment.Left;
+            UpdateReadButton(false);
         }
 
-        private void HandleScroll(object sender, ScrollEventArgs e)
-        {
-            float scrollValue = (HexStreamVScrollBar.Value * 1f / (HexStreamVScrollBar.Maximum - HexStreamVScrollBar.LargeChange));
-            if (scrollValue > 0.9f)
-            {
-                LoadNextChunk();
-            }
-            else if (scrollValue < 0.1f && _currentOffset > CHUNK_SIZE)
-            {
-                LoadPrevChunk();
-            }
-        }
-
-        private bool IsFilePathValid(string filePath)
-        {
-            return filePath.Contains('\\') && !string.IsNullOrEmpty(filePath);
-        }
-
-        private void UpdateReadButton(bool isReading)
-        {
-            ReadHexButton.Text = isReading ? "Reading..." : "Read";
-        }
-
-        private void UpdateHexText(string text)
+        private void UpdateDisplayText(string text)
         {
             HexStreamText.Text = text;
             SplitContainer.Panel1.PerformLayout();
         }
 
-        private string TrimText(string text, bool isUp)
+        private void HandleScroll(object sender, ScrollEventArgs e)
         {
-            int chunkCount = (text.Split('\n').Length - 1) * BYTES_PER_LINE / CHUNK_SIZE;
-            if (chunkCount < MAX_DISPLAY_CHUNK)
-            {
-                return text;
-            }
-            int textOffset = text.Length / (MAX_DISPLAY_CHUNK + 1);
-            string result = isUp ? text[textOffset..] : text[..(textOffset * MAX_DISPLAY_CHUNK)];
-            return result;
+            VScrollProperties vScroll = SplitContainer.Panel1.VerticalScroll;
+            float scrollValue = (vScroll.Value * 1f / (vScroll.Maximum - vScroll.LargeChange));
+            OnTextScroll?.Invoke(scrollValue);
         }
 
-        private VScrollProperties HexStreamVScrollBar => SplitContainer.Panel1.VerticalScroll;
+        private void UpdateReadButton(bool isReading)
+        {
+            ReadHexButton.Text = isReading ? READING_TEXT : READ_TEXT;
+        }
     }
 }

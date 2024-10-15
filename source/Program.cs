@@ -11,7 +11,12 @@ namespace HexReader
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-            Application.Run(new MainFormView());
+
+            MainFormModel model = new MainFormModel("", "");
+            MainFormView view = new MainFormView(model);
+            MainFormController controller = new MainFormController(model, view);
+
+            Application.Run(view);
         }
     }
 }
