@@ -92,7 +92,7 @@ namespace HexReader.UI.MainForm
                 _maxOffset = hexStream.Offset;
                 _minOffset = hexStream.Offset;
             }
-            _model.UpdateDisplayString(displayString);
+            _model.UpdateDisplayString(displayString, ScrollbarPosition.TOP);
         }
 
         private void HandleScroll(float value)
@@ -101,7 +101,6 @@ namespace HexReader.UI.MainForm
             {
                 return;
             }
-            Debug.WriteLine(value);
             if (value > 0.9f)
             {
                 LoadNextChunk();
@@ -118,10 +117,14 @@ namespace HexReader.UI.MainForm
             using (HexStream hexStream = new HexStream(_model.FilePath, CHUNK_SIZE, BYTES_PER_LINE))
             {
                 hexStream.Shift(_maxOffset);
+                if (hexStream.IsFileEnd)
+                {
+                    return;
+                }
                 displayString = TrimText(displayString + hexStream.ReadChunk() + "\n", true);
                 _maxOffset = hexStream.Offset;
             }
-            _model.UpdateDisplayString(displayString);
+            _model.UpdateDisplayString(displayString, ScrollbarPosition.MIDDLE);
         }
 
         private void LoadPrevChunk()
@@ -131,10 +134,14 @@ namespace HexReader.UI.MainForm
             {
                 _minOffset = Math.Max(_minOffset - CHUNK_SIZE * 2, 0);
                 hexStream.Shift(_minOffset);
+                if (hexStream.IsFileEnd)
+                {
+                    return;
+                }
                 displayString = TrimText(hexStream.ReadChunk() + "\n" + displayString, false);
                 _minOffset = hexStream.Offset;
             }
-            _model.UpdateDisplayString(displayString);
+            _model.UpdateDisplayString(displayString, ScrollbarPosition.MIDDLE);
         }
 
         private bool IsFilePathValid(string filePath)

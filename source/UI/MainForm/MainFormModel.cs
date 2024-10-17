@@ -3,7 +3,7 @@
     public class MainFormModel
     {
         public event Action<string> OnFilePathUpdate = delegate { };
-        public event Action<string> OnDisplayStringUpdate = delegate { };
+        public event Action<string, ScrollbarPosition> OnDisplayStringUpdate = delegate { };
 
         // Temp Values
         public string FilePath { get; private set; }
@@ -21,10 +21,10 @@
             OnFilePathUpdate?.Invoke(FilePath);
         }
 
-        public void UpdateDisplayString(string displayString)
+        public void UpdateDisplayString(string displayString, ScrollbarPosition scrollbarPosition)
         {
             DisplayString = displayString;
-            OnDisplayStringUpdate?.Invoke(DisplayString);
+            OnDisplayStringUpdate?.Invoke(DisplayString, scrollbarPosition);
         }
     }
 }

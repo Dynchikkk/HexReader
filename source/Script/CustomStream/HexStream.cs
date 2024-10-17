@@ -1,9 +1,11 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Text;
 
 namespace HexReader.Script.CustomStream
 {
     public class HexStream : IDisposable
     {
+        private const string END_OF_FILE = "END_OF_FILE";
         private const int DEFAULT_CHUNK_SIZE = 256;
         private const int DEFAULT_BYTES_PER_LINE = 16;
 
@@ -46,6 +48,10 @@ namespace HexReader.Script.CustomStream
 
         public void Shift(long offset)
         {
+            if (offset == -1)
+            {
+                offset = _fileStream.Length - _chunkSize;
+            }
             _fileStream.Seek(offset, SeekOrigin.Begin);
             _offset += offset;
         }
@@ -56,7 +62,12 @@ namespace HexReader.Script.CustomStream
             int lineCount = _chunkSize / _bytesPerLine;
             for (int i = 0; i < lineCount - 1; i++)
             {
-                displayString.Append(ReadLine() + '\n');
+                string line = ReadLine();
+                displayString.Append(line + '\n');
+                if (line == END_OF_FILE)
+                {
+                    return displayString.ToString();
+                }
             }
             displayString.Append(ReadLine());
             return displayString.ToString();
@@ -65,6 +76,10 @@ namespace HexReader.Script.CustomStream
         public string ReadLine()
         {
             byte[] bytesLine = new byte[_bytesPerLine];
+            if (_offset > _fileStream.Length)
+            {
+                return END_OF_FILE;
+            }
             _binaryReader.Read(bytesLine, 0, _bytesPerLine);
             int halfBytesPerLine = _bytesPerLine / 2;
 
@@ -96,6 +111,7 @@ namespace HexReader.Script.CustomStream
             _binaryReader?.Close();
         }
 
+        public bool IsFileEnd => _offset > _fileStream.Length;
         public long Offset => _offset;
         public long Position => _binaryReader.BaseStream.Position;
         public long Length => _binaryReader.BaseStream.Length;

@@ -30,9 +30,10 @@
         {
             SplitContainer = new SplitContainer();
             HexStreamText = new Label();
+            ShiftToEndButton = new Button();
             ShiftPostitionText = new TextBox();
             ShiftButton = new Button();
-            ResetPositionButton = new Button();
+            ShiftToStartButton = new Button();
             FunctionLabel = new Label();
             ReadHexButton = new Button();
             FilePathTextBox = new TextBox();
@@ -60,9 +61,10 @@
             // 
             // SplitContainer.Panel2
             // 
+            SplitContainer.Panel2.Controls.Add(ShiftToEndButton);
             SplitContainer.Panel2.Controls.Add(ShiftPostitionText);
             SplitContainer.Panel2.Controls.Add(ShiftButton);
-            SplitContainer.Panel2.Controls.Add(ResetPositionButton);
+            SplitContainer.Panel2.Controls.Add(ShiftToStartButton);
             SplitContainer.Panel2.Controls.Add(FunctionLabel);
             SplitContainer.Panel2.Controls.Add(ReadHexButton);
             SplitContainer.Panel2.Controls.Add(FilePathTextBox);
@@ -79,6 +81,17 @@
             HexStreamText.Size = new Size(217, 14);
             HexStreamText.TabIndex = 0;
             HexStreamText.Text = "The text will be printed here.";
+            // 
+            // ShiftToEndButton
+            // 
+            ShiftToEndButton.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            ShiftToEndButton.Location = new Point(122, 108);
+            ShiftToEndButton.Name = "ShiftToEndButton";
+            ShiftToEndButton.Size = new Size(105, 30);
+            ShiftToEndButton.TabIndex = 10;
+            ShiftToEndButton.Text = "To file End";
+            ShiftToEndButton.UseVisualStyleBackColor = true;
+            ShiftToEndButton.Click += ShiftToEndButton_Click;
             // 
             // ShiftPostitionText
             // 
@@ -103,16 +116,16 @@
             ShiftButton.UseVisualStyleBackColor = true;
             ShiftButton.Click += ShiftButton_Click;
             // 
-            // ResetPositionButton
+            // ShiftToStartButton
             // 
-            ResetPositionButton.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
-            ResetPositionButton.Location = new Point(12, 108);
-            ResetPositionButton.Name = "ResetPositionButton";
-            ResetPositionButton.Size = new Size(214, 30);
-            ResetPositionButton.TabIndex = 7;
-            ResetPositionButton.Text = "Reset";
-            ResetPositionButton.UseVisualStyleBackColor = true;
-            ResetPositionButton.Click += ResetPositionButton_Click;
+            ShiftToStartButton.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            ShiftToStartButton.Location = new Point(12, 108);
+            ShiftToStartButton.Name = "ShiftToStartButton";
+            ShiftToStartButton.Size = new Size(105, 30);
+            ShiftToStartButton.TabIndex = 7;
+            ShiftToStartButton.Text = "To file Start";
+            ShiftToStartButton.UseVisualStyleBackColor = true;
+            ShiftToStartButton.Click += ShiftToStartButton_Click;
             // 
             // FunctionLabel
             // 
@@ -174,6 +187,7 @@
         private Label FunctionLabel;
         private TextBox ShiftPostitionText;
         private Button ShiftButton;
-        private Button ResetPositionButton;
+        private Button ShiftToStartButton;
+        private Button ShiftToEndButton;
     }
 }

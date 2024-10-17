@@ -1,4 +1,6 @@
-﻿namespace HexReader.UI.MainForm
+﻿using System.Diagnostics;
+
+namespace HexReader.UI.MainForm
 {
     public partial class MainFormView : Form
     {
@@ -56,12 +58,17 @@
         {
             OnRead?.Invoke();
             UpdateReadButton(true);
+        }
+
+        private void ShiftToStartButton_Click(object sender, EventArgs e)
+        {
+            OnShift?.Invoke(0);
             SplitContainer.Panel1.VerticalScroll.Value = 0;
         }
 
-        private void ResetPositionButton_Click(object sender, EventArgs e)
+        private void ShiftToEndButton_Click(object sender, EventArgs e)
         {
-            OnRead?.Invoke();
+            OnShift?.Invoke(-1);
             SplitContainer.Panel1.VerticalScroll.Value = 0;
         }
 
@@ -85,10 +92,31 @@
             UpdateReadButton(false);
         }
 
-        private void UpdateDisplayText(string text)
+        private void UpdateDisplayText(string text, ScrollbarPosition scrollbarPosition)
         {
+            
             HexStreamText.Text = text;
-            SplitContainer.Panel1.PerformLayout();
+            SplitContainer.PerformLayout();
+            int scrollbarValue = 0;
+            VScrollProperties vScroll = SplitContainer.Panel1.VerticalScroll;
+            switch (scrollbarPosition)
+            {
+                case ScrollbarPosition.AUTO:
+                    scrollbarValue = vScroll.Value;
+                    break;
+                case ScrollbarPosition.TOP:
+                    scrollbarValue = 0;
+                    break;
+                case ScrollbarPosition.MIDDLE:
+                    scrollbarValue = (vScroll.Maximum - vScroll.Minimum) / 2;
+                    break;
+                case ScrollbarPosition.DOWN:
+                    scrollbarValue = vScroll.Maximum;
+                    break;
+                default:
+                    break;
+            }
+            SplitContainer.Panel1.VerticalScroll.Value = scrollbarValue;
         }
 
         private void HandleScroll(object sender, ScrollEventArgs e)
@@ -96,6 +124,7 @@
             VScrollProperties vScroll = SplitContainer.Panel1.VerticalScroll;
             float scrollValue = (vScroll.Value * 1f / (vScroll.Maximum - vScroll.LargeChange));
             OnTextScroll?.Invoke(scrollValue);
+            SplitContainer.PerformLayout();
         }
 
         private void UpdateReadButton(bool isReading)
